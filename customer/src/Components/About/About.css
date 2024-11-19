@@ -1,46 +1,106 @@
-body {
-  font-family: 'Arial', sans-serif;
-  background-color: #fff3f8; /* Light pink background */
+/* src/About.css */
+
+/* General Styles */
+* {
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
+  font-family: 'Arial', sans-serif;
 }
 
+/* Main Container */
 .about-container {
-  max-width: 800px;
-  margin: 50px auto;
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  background: linear-gradient(135deg, #ffcccc 30%, #ffe5b4 100%); /* Light pink to light orange gradient */
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.about-container:hover {
-  transform: scale(1.02);
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
-}
-
-.about-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background: linear-gradient(to right, #ffe0e0, #ffb3b3); /* Light pink gradient */
+  min-height: 100vh;
   text-align: center;
 }
 
-h1 {
-  color: #ff6f61; /* Darker shade for heading */
+.about-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #fff; /* White background for content */
+  border-radius: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  max-width: 1200px;
+  width: 100%;
+  padding: 20px;
+  transform: scale(1);
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Hover effect on the content */
+.about-content:hover {
+  transform: scale(1.05); /* Slight zoom effect */
+}
+
+/* Image Section */
+.about-image img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-height: 350px; /* Limiting the height for better alignment */
+  margin-right: 30px;
+}
+
+/* Text Section */
+.about-text {
+  max-width: 500px;
+  padding: 20px;
+}
+
+.about-text h1 {
+  font-size: 2.5rem;
+  color: #ff6f61; /* Light orange color for heading */
   margin-bottom: 20px;
-  transition: color 0.3s ease;
+  font-weight: bold;
 }
 
-h1:hover {
-  color: #ff4d4d; /* Darker pink on hover */
-}
-
-p {
-  font-size: 18px;
-  color: #333; /* Darker text for better readability */
+.about-text p {
+  font-size: 1.2rem;
+  color: #333;
   line-height: 1.6;
-  transition: transform 0.3s ease;
+  font-weight: 300;
 }
 
-p:hover {
-  transform: translateY(-2px); /* Slight lift effect on hover */
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .about-content {
+    flex-direction: column;
+    align-items: center;
+    padding: 15px;
+  }
+
+  .about-image img {
+    margin-bottom: 20px;
+    max-height: 250px; /* Adjust image size for smaller screens */
+  }
+
+  .about-text {
+    max-width: 100%;
+  }
+
+  .about-text h1 {
+    font-size: 2rem;
+  }
+
+  .about-text p {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .about-text h1 {
+    font-size: 1.8rem;
+  }
+
+  .about-text p {
+    font-size: 0.9rem;
+  }
 }

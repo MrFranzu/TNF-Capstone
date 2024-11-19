@@ -104,3 +104,11 @@ label {
     transform: translateY(-10px);
   }
 }
+.contact-container a {
+  color: orange;
+  text-decoration: none; /* Optional: Remove underline for links */
+}
+
+.contact-container a:hover {
+  color: darkorange; /* Optional: Change color on hover */
+}

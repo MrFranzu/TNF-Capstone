@@ -37,7 +37,7 @@ const Contact = () => {
             target="_blank" 
             rel="noopener noreferrer"
           >
-            https://www.facebook.com/tnfeventcenter
+            TNF Event Center
           </a>
         </h3>
 

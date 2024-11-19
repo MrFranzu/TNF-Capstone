@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './BookingForm.css';
 import { db } from './firebaseConfig';
-import { collection, doc, setDoc, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import { QRCodeCanvas } from 'qrcode.react';
+import DatePicker from 'react-datepicker';  
+import "react-datepicker/dist/react-datepicker.css";  
+import { addDays } from 'date-fns';  
 
 const BookingForm = () => {
   const [step, setStep] = useState(1);
@@ -19,6 +23,19 @@ const BookingForm = () => {
   const [isBooked, setIsBooked] = useState(false);
   const [loading, setLoading] = useState(false);
   const [qrCodeValue, setQrCodeValue] = useState('');
+  const [bookedDates, setBookedDates] = useState([]); 
+  const [dateError, setDateError] = useState('');
+
+  useEffect(() => {
+    const fetchBookedDates = async () => {
+      const q = query(collection(db, 'bookings'), where('eventDate', '>=', Timestamp.now()));
+      const querySnapshot = await getDocs(q);
+      const dates = querySnapshot.docs.map((doc) => doc.data().eventDate.toDate().toISOString().split('T')[0]);
+      setBookedDates(dates);
+    };
+
+    fetchBookedDates();
+  }, []);
 
   const handleContactNumberChange = (e) => {
     const value = e.target.value.replace(/\D/g, '');
@@ -64,27 +81,32 @@ const BookingForm = () => {
       alert('Please enter a valid email address.');
       return;
     }
+
+    if (bookedDates.includes(eventDate)) {
+      alert('Sorry, this date is already booked. Please choose another one.');
+      return;
+    }
+
     const uniqueCode = `${eventTheme}-${numAttendees}-${Date.now()}`;
     setQrCodeValue(uniqueCode);
 
-    // Convert types here
     const bookingData = {
       name,
-      contactNumber: Number(contactNumber), // Convert to number
+      contactNumber: Number(contactNumber),
       email,
       paymentMethod,
-      numAttendees: Number(numAttendees), // Convert to number
+      numAttendees: Number(numAttendees),
       eventType,
-      eventDate: Timestamp.fromDate(new Date(eventDate)), // Convert to Firestore Timestamp
+      eventDate: Timestamp.fromDate(new Date(eventDate)),
       menuPackage,
       notes,
-      qrCode: uniqueCode, // Store the unique code in the qrCode field
+      qrCode: uniqueCode,
     };
 
     setLoading(true);
     try {
-      const bookingDocRef = doc(db, 'bookings', uniqueCode); // Change to use qrCode
-      await setDoc(bookingDocRef, bookingData); // Directly save to the bookings collection
+      const bookingDocRef = doc(db, 'bookings', uniqueCode);
+      await setDoc(bookingDocRef, bookingData);
       console.log("Document written with ID: ", bookingDocRef.id);
       setIsBooked(true);
       resetForm();
@@ -127,21 +149,29 @@ const BookingForm = () => {
     { id: 'event-center', label: 'Event Center' },
   ];
 
+  const isDateBooked = (date) => bookedDates.includes(date);
+
   return (
     <div className="booking-form">
       {!isBooked ? (
         <>
-          <h1>Welcome!</h1>
-          <p className="booking-intro">Book Your Event Now!</p>
+          <div className="intro-text">
+            <h1>Welcome!</h1>
+            <p className="booking-intro">Book Your Event Now!</p>
+          </div>
           {step === 1 ? (
             <form onSubmit={handleNext}>
               <div className="box-container">
                 <h2>Personal Information</h2>
+          
                 <input type="text" placeholder="Your Name" value={name} onChange={(e) => setName(e.target.value)} required />
+                
                 <label>Contact Number</label>
                 <input type="tel" placeholder="Your 11-digit Contact Number" value={contactNumber} onChange={handleContactNumberChange} required maxLength="11" />
+                
                 <label>Email</label>
                 <input type="email" placeholder="Your Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                
                 <label>Payment Method</label>
                 <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} required>
                   <option value="" disabled>Select Payment Method</option>
@@ -151,6 +181,8 @@ const BookingForm = () => {
                   <option value="bank-transfer">Bank Transfer</option>
                   <option value="cash">Cash</option>
                 </select>
+                
+                <label>Number of Attendees</label>
                 <input type="number" placeholder="Number of Attendees" value={numAttendees} onChange={(e) => setNumAttendees(e.target.value)} required min="1" />
               </div>
               <button type="submit">Next</button>
@@ -163,7 +195,7 @@ const BookingForm = () => {
                   {eventTypes.map((event) => (
                     <label 
                       key={event.id} 
-                      className={eventType === event.label ? 'active' : ''} // Apply 'active' class conditionally
+                      className={eventType === event.label ? 'active' : ''}
                     >
                       <input 
                         type="radio" 
@@ -177,11 +209,40 @@ const BookingForm = () => {
                     </label>
                   ))}
                 </div>
+                
+                <label>Event Theme</label>
                 <input type="text" placeholder="Event Theme" value={eventTheme} onChange={(e) => setEventTheme(e.target.value)} required />
-                <label>Event Date</label>
-                <input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} required />
-                <label>Menu Package</label>
+                
+                <label>Event Date</label>           
+                <DatePicker 
+                  selected={eventDate ? new Date(eventDate) : null} 
+                  onChange={(date) => {
+                    const selectedDate = date.toISOString().split('T')[0];
+                    setEventDate(selectedDate);
+                    if (bookedDates.includes(selectedDate)) {
+                      setDateError('Sorry, this date is already booked. Please choose another one.');
+                    } else {
+                      setDateError('');
+                    }
+                  }}
+                  minDate={new Date()} 
+                  filterDate={(date) => {
+                    const dateStr = date.toISOString().split('T')[0];
+                    return !bookedDates.some(bookedDate => {
+                      const bookedDateObj = new Date(bookedDate);
+                      const prevDay = new Date(bookedDateObj);
+                      prevDay.setDate(bookedDateObj.getDate() - 1);
+                      return prevDay.toISOString().split('T')[0] === dateStr;
+                    });
+                  }}
+                  dateFormat="yyyy-MM-dd"
+                  className="date-picker"
+                />
+                {dateError && <p className="error-message">{dateError}</p>}
+                
+             
                 <input type="text" placeholder="Menu Package" value={menuPackage} onChange={(e) => setMenuPackage(e.target.value)} required />
+                
                 <label>Notes</label>
                 <textarea placeholder="Any additional notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
               </div>
